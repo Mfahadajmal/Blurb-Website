@@ -224,7 +224,7 @@ function PlansContent() {
 
             <div className="flex items-center justify-center gap-3 mb-4">
               <ContentIcon className="h-8 w-8 text-blue-200" />
-              <h1 className="text-4xl md:text-5xl font-bold">Feature "{contentTitle}"</h1>
+              <h1 className="text-4xl md:text-5xl font-bold">Feature This Ad</h1>
             </div>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
               Select the perfect plan to boost your {isJob ? "job posting" : "billboard"}'s visibility and reach more{" "}
