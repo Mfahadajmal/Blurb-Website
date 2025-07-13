@@ -1,17 +1,16 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { onAuthStateChanged, updatePassword } from "firebase/auth"
+import { onAuthStateChanged } from "firebase/auth"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { auth, db } from "@/firebase/config"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { User, Camera, Save, Eye, EyeOff } from "lucide-react"
+import { User, Camera, Save } from "lucide-react"
 import { AuthCheck } from "@/components/auth-check"
 import Navbar from "@/components/navbar"
 
@@ -21,8 +20,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
 
@@ -31,8 +28,6 @@ export default function ProfilePage() {
     email: "",
     contact: "",
     profileImage: "",
-    currentPassword: "",
-    newPassword: "",
   })
 
   useEffect(() => {
@@ -48,8 +43,6 @@ export default function ProfilePage() {
               email: currentUser.email || "",
               contact: userData.contact || "",
               profileImage: userData.profileImage || "",
-              currentPassword: "",
-              newPassword: "",
             })
           }
         } catch (error) {
@@ -92,13 +85,11 @@ export default function ProfilePage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       setError("Please select a valid image file")
       return
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError("Image size should be less than 5MB")
       return
@@ -132,32 +123,10 @@ export default function ProfilePage() {
       return false
     }
 
-    // Validate Pakistani phone number format
     const phoneRegex = /^03\d{9}$/
     if (!phoneRegex.test(formData.contact)) {
       setError("Please enter a valid Pakistani phone number (03xxxxxxxxx)")
       return false
-    }
-
-    // If changing password, validate new password
-    if (formData.newPassword) {
-      if (!formData.currentPassword) {
-        setError("Current password is required to change password")
-        return false
-      }
-
-      if (formData.newPassword.length < 6) {
-        setError("New password must be at least 6 characters long")
-        return false
-      }
-
-      // Check if password contains both letters and numbers
-      const hasLetter = /[a-zA-Z]/.test(formData.newPassword)
-      const hasNumber = /\d/.test(formData.newPassword)
-      if (!hasLetter || !hasNumber) {
-        setError("New password must contain both letters and numbers")
-        return false
-      }
     }
 
     return true
@@ -172,33 +141,16 @@ export default function ProfilePage() {
       setError("")
       setMessage("")
 
-      // Update Firestore document
       await updateDoc(doc(db, "users", user.uid), {
         username: formData.username,
         contact: formData.contact,
         profileImage: formData.profileImage,
       })
 
-      // Update password if provided
-      if (formData.newPassword && formData.currentPassword) {
-        await updatePassword(user, formData.newPassword)
-        setFormData((prev) => ({
-          ...prev,
-          currentPassword: "",
-          newPassword: "",
-        }))
-      }
-
       setMessage("Profile updated successfully!")
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error updating profile:", error)
-      if (error.code === "auth/wrong-password") {
-        setError("Current password is incorrect")
-      } else if (error.code === "auth/requires-recent-login") {
-        setError("Please log out and log back in to change your password")
-      } else {
-        setError("Failed to update profile. Please try again.")
-      }
+      setError("Failed to update profile. Please try again.")
     } finally {
       setSaving(false)
     }
@@ -239,11 +191,10 @@ export default function ProfilePage() {
               {message && (
                 <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">{message}</div>
               )}
-
               {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">{error}</div>}
 
               <form onSubmit={handleSubmit} className="space-y-8">
-                {/* Profile Picture Section */}
+                {/* Profile Picture */}
                 <div className="flex flex-col items-center space-y-4">
                   <div className="relative">
                     <div className="w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
@@ -328,64 +279,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Password Change Section */}
-                <div className="border-t border-gray-200 pt-8">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-6">Change Password</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Current Password */}
-                    <div className="space-y-2">
-                      <Label htmlFor="currentPassword" className="text-sm font-medium text-gray-700">
-                        Current Password
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="currentPassword"
-                          name="currentPassword"
-                          type={showPassword ? "text" : "password"}
-                          value={formData.currentPassword}
-                          onChange={handleInputChange}
-                          placeholder="Enter current password"
-                          className="h-12 text-lg pr-12"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* New Password */}
-                    <div className="space-y-2">
-                      <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700">
-                        New Password
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="newPassword"
-                          name="newPassword"
-                          type={showNewPassword ? "text" : "password"}
-                          value={formData.newPassword}
-                          onChange={handleInputChange}
-                          placeholder="Enter new password"
-                          className="h-12 text-lg pr-12"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                          {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500">Must be 6+ characters with letters and numbers</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Submit Button */}
+                {/* Save Button */}
                 <div className="flex justify-end pt-6">
                   <Button
                     type="submit"

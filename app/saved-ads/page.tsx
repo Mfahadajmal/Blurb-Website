@@ -244,12 +244,9 @@ export default function SavedAdsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center text-sm">
-                        <div className="flex items-center text-yellow-400">
-                          <Star size={14} className="fill-yellow-400" />
-                          <span className="ml-1 text-gray-700">4.8</span>
-                        </div>
+                        
                         <span className="mx-2 text-gray-300">•</span>
-                        <span className="text-gray-500">High visibility</span>
+                        <span className="text-gray-500">View Details</span>
                       </div>
                     </div>
                   </div>
