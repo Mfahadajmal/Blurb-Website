@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
     console.log("🌐 Base URL:", baseUrl)
     console.log("💰 Plan details:", { planId, planName, price })
